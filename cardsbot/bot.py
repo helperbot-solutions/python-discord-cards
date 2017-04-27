@@ -17,7 +17,8 @@ class CardsBot(commands.Bot):
         self.gms = []
 
         # Register commands:
-        self.command(name="start", pass_context=True)(self.start_cah_game)
+        self.start_game = self.group(name="start", pass_context=True)(self.start_game)
+        self.start_game.command(name="cah", pass_context=True)(self.start_cah_game)
         pass
 
     def create_session(self, channel_id):
@@ -36,6 +37,10 @@ class CardsBot(commands.Bot):
 
         for g in self.gms:
             await g.on_message(*args, **kwargs)
+
+    async def start_game(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await self.say('Invalid start command passed...')
 
     async def start_cah_game(self, ctx):
         """Starts a game."""
