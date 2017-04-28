@@ -29,7 +29,6 @@ class CardsBot(commands.Bot):
 
     async def on_message(self, *args, **kwargs):
         msg = args[0]
-        print(msg.content)
         author = msg.author
         if author == self.user:
             return
