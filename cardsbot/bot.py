@@ -17,18 +17,20 @@ class CardsBot(commands.Bot):
         self.gms = []
 
         # Register commands:
-        self.command(name="start", pass_context=True)(self.start_cah_game)
+        self.start_game = self.group(name="start", pass_context=True)(self.start_game)
+        self.start_game.command(name="cah", pass_context=True)(self.start_cah_game)
         pass
 
-    def create_session(self, channel_id):
-        g = SeverGame(self, channel_id.id, reg_msg_method=False)
-        self.gms.append(g)
-        self.loop.create_task(g.run())
-        pass
+    async def game_end_callback(self, game):
+        try:
+            index = self.gms.index(game)
+        except ValueError:
+            # Not in games (this is an error)
+            return
+        del(self.gms[index])
 
     async def on_message(self, *args, **kwargs):
         msg = args[0]
-        print(msg.content)
         author = msg.author
         if author == self.user:
             return
@@ -37,14 +39,13 @@ class CardsBot(commands.Bot):
         for g in self.gms:
             await g.on_message(*args, **kwargs)
 
+    async def start_game(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await self.say('Invalid start command passed...')
+
     async def start_cah_game(self, ctx):
         """Starts a game."""
-        channel = ctx.message.channel
-
-        if type(channel) == discord.channel.PrivateChannel:
-            await self.say("I'm afraid you can't start a fantastical game by yourself. Sorry.")
-        else:
-            self.create_session(ctx.message.channel)
+        self.gms.append(SeverGame.create_session(self, ctx.message, self.game_end_callback))
 
     async def on_ready(self):
         print('Logged in as')
