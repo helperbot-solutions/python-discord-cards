@@ -14,7 +14,8 @@ class CardsBot(commands.Bot):
         else:
             self.token = token
 
-        self.gms = []
+        # Holds the games {channel_id: game_object}:
+        self.gms = {}
 
         # Register commands:
         self.start_game = self.group(name="start", pass_context=True)(self.start_game)
@@ -22,12 +23,12 @@ class CardsBot(commands.Bot):
         pass
 
     async def game_end_callback(self, game):
-        try:
-            index = self.gms.index(game)
-        except ValueError:
+        channel_id = game.channel_id
+        if channel_id not in self.gms:
             # Not in games (this is an error)
             return
-        del(self.gms[index])
+
+        del(self.gms[channel_id])
 
     async def on_message(self, *args, **kwargs):
         msg = args[0]
@@ -37,7 +38,7 @@ class CardsBot(commands.Bot):
         await self.process_commands(*args, **kwargs)
 
         for g in self.gms:
-            await g.on_message(*args, **kwargs)
+            await self.gms[g].on_message(*args, **kwargs)
 
     async def start_game(self, ctx):
         if ctx.invoked_subcommand is None:
@@ -45,7 +46,10 @@ class CardsBot(commands.Bot):
 
     async def start_cah_game(self, ctx):
         """Starts a game."""
-        self.gms.append(SeverGame.create_session(self, ctx.message, self.game_end_callback))
+        channel_id = ctx.message.channel.id
+        if channel_id in self.gms:
+            await self.gms[channel_id].end()
+        self.gms[channel_id] = SeverGame.create_session(self, ctx.message, self.game_end_callback)
 
     async def on_ready(self):
         print('Logged in as')
