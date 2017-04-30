@@ -20,6 +20,7 @@ class CardsBot(commands.Bot):
         # Register commands:
         self.start_game = self.group(name="start", pass_context=True)(self.start_game)
         self.start_game.command(name="cah", pass_context=True)(self.start_cah_game)
+        self.end_game = self.command(name="end", pass_context=True)(self.end_game)
         pass
 
     async def game_end_callback(self, game):
@@ -50,6 +51,13 @@ class CardsBot(commands.Bot):
         if channel_id in self.gms:
             await self.gms[channel_id].end()
         self.gms[channel_id] = SeverGame.create_session(self, ctx.message, self.game_end_callback)
+
+    async def end_game(self, ctx):
+        channel_id = ctx.message.channel.id
+        if channel_id in self.gms:
+            await self.gms[channel_id].end()
+
+        await self.say("Game successfully terminated.")
 
     async def on_ready(self):
         print('Logged in as')
