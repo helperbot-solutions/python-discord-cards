@@ -1,4 +1,4 @@
 discord.py
 
 # Games:
-git+git://github.com/luciengaitskell/python-discord-cah.git@v1.7
+git+git://github.com/luciengaitskell/python-discord-cah.git@v1.8
